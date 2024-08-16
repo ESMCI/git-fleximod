@@ -59,7 +59,11 @@ class GitInterface:
         command = self._git_command(operation, *newargs)
         if isinstance(command, list):
             try:
-                return utils.execute_subprocess(command, output_to_caller=True)
+                status, output = utils.execute_subprocess(command, status_to_caller=True, output_to_caller=True)
+                if status:
+                    self.logger.error("Command {} returned an unknown error".format(command))
+                    raise RuntimeError
+                return output
             except Exception as e:
                 sys.exit(e)
         else:
