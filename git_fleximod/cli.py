@@ -3,7 +3,7 @@ import argparse, os, sys
 from importlib.resources import files
 from git_fleximod import utils
 
-__version__ = "0.9.4"
+__version__ = "1.0.0"
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def print_help(self, file=None):
