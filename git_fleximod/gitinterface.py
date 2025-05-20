@@ -2,6 +2,7 @@ import os
 import sys
 from . import utils
 from pathlib import Path
+import asyncio
 
 class GitInterface:
     def __init__(self, repo_path, logger):
@@ -47,8 +48,7 @@ class GitInterface:
             command = ("git", "-C", str(self.repo_path), "init")
             utils.execute_subprocess(command)
 
-    # pylint: disable=unused-argument
-    def git_operation(self, operation, *args, **kwargs):
+    def _git_operation_command(self, operation, args):
         newargs = []
         for a in args:
             # Do not use ssh interface
@@ -56,11 +56,34 @@ class GitInterface:
                 a = a.replace("git@github.com:", "https://github.com/")
             newargs.append(a)
 
-        command = self._git_command(operation, *newargs)
+        return self._git_command(operation, *newargs)
+
+    # pylint: disable=unused-argument
+    def git_operation(self, operation, *args, **kwargs):
+        command = self._git_operation_command(operation, args)
         if isinstance(command, list):
             try:
                 status, output = utils.execute_subprocess(command, status_to_caller=True, output_to_caller=True)
                 return status, output.rstrip()
+            except Exception as e:
+                sys.exit(e)
+        else:
+            return 0, command
+
+    # pylint: disable=unused-argument
+    async def git_operation_async(self, operation, *args, **kwargs):
+        command = self._git_operation_command(operation, args)
+        if isinstance(command, list):
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *command,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, stderr = await process.communicate()
+                status = process.returncode
+                output = stdout.decode().strip() if stdout else stderr.decode().strip()
+                return status, output
             except Exception as e:
                 sys.exit(e)
         else:

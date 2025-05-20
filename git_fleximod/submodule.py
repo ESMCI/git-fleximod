@@ -307,7 +307,7 @@ class Submodule():
         rgit.config_set_value('submodule.' + self.name, "url", self.url)
         rgit.config_set_value('submodule.' + self.name, "path", self.path)
 
-    def update(self):
+    async def update(self):
         """
         Updates the submodule to the latest or specified version.
 
@@ -378,7 +378,8 @@ class Submodule():
                 git.git_operation("submodule", "add", "--name", self.name, "--", self.url, self.path) 
 
             if not repo_exists:
-                git.git_operation("submodule", "update", "--init", "--", self.path)
+                git.git_operation("submodule", "init", "--", self.path)
+                await git.git_operation_async("submodule", "update", "--", self.path)
 
             if self.fxtag:        
                 smgit = GitInterface(repodir, self.logger)
