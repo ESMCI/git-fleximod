@@ -305,14 +305,11 @@ class Submodule():
         else:
             print(f"Successfully checked out {self.name:>20} at {self.fxtag}")
         status,f = sprepo_git.git_operation("status")
-        checkout_nextline = False
         # Restore any files deleted from sandbox
-        for line in f.split():
-            if checkout_nextline:
-                status, _ = sprepo_git.git_operation("checkout", line)
-                checkout_nextline = False
-            if line == "deleted:":
-                checkout_nextline = True
+        for line in f.splitlines():
+            if "deleted:" in line:
+                deleted_file = line.split("deleted:")[1].strip()
+                sprepo_git.git_operation("checkout", deleted_file)
 
         rgit.config_set_value('submodule.' + self.name, "active", "true")
         rgit.config_set_value('submodule.' + self.name, "url", self.url)
@@ -351,9 +348,9 @@ class Submodule():
             repo_exists = True
         # Look for a .gitmodules file in the newly checkedout repo
         if self.fxsparse:
-            print(f"Sparse checkout {self.name} fxsparse {self.fxsparse} {git.repo_path}")
+            print(f"Sparse checkout {self.name} fxsparse {self.fxsparse}")
             if not os.path.isfile(self.fxsparse):
-                self.logger.info("Submodule {} fxsparse file not found")
+                self.logger.info("Submodule {} fxsparse file not found".format(self.name))
 
             self.sparse_checkout()
         else:
@@ -423,17 +420,18 @@ class Submodule():
                 if fxtag and fxtag not in tags:
                     git.git_operation("fetch", newremote, "--tags")
                 status, atag = git.git_operation("describe", "--tags", "--always")
-                status, files = git.git_operation("diff", "--name-only")
+                status, files = git.git_operation("diff", "--name-only", "-z")
                 modfiles = []
                 moddirs = []
                 if files:
-                    for f in files.split():
-                        if not os.path.exists(f):
-                            git.git_operation("checkout",f)
-                        elif os.path.isdir(f):
-                            moddirs.append(f)
-                        else:
-                            modfiles.append(f)
+                    for f in files.split('\0'):
+                        if f:
+                            if os.path.exists(f):
+                                git.git_operation("checkout",f)
+                            elif os.path.isdir(f):
+                                moddirs.append(f)
+                            else:
+                                modfiles.append(f)
                 if fxtag and fxtag != atag:
                     try:
                         status, _ = git.git_operation("checkout", fxtag)
