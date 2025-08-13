@@ -1,6 +1,5 @@
 from pathlib import Path
 import argparse, os, sys
-from importlib.resources import files
 from git_fleximod import utils
 
 __version__ = "1.0.1"
@@ -12,13 +11,13 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
         # Then append the contents of README.md
         candidate_paths = [
-            os.path.join(sys.prefix, "share", "your-package", "README.md"),
-            os.path.join(os.path.dirname(__file__), "..", "README.md")  # fallback for dev
+            Path(sys.prefix) / "share" / "your-package" / "README.md",
+            Path(__file__).resolve().parent.parent / "README.md",  # fallback for dev
         ]
         for path in candidate_paths:
             if os.path.exists(path):
                 with open(path) as f:
-                    print( f.read(), file=file)
+                    print( f.read_text(encoding="utf-8"), file=file)
                     return
         print( "README.md not found.", file=file)
 
@@ -42,7 +41,7 @@ def find_root_dir(filename=".gitmodules"):
         for dl in dirlist:
             attempt = dl / filename
             if attempt.is_file():
-                return str(dl)
+                return dl
         return None
     return Path(root)
 
