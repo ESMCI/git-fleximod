@@ -24,26 +24,22 @@ class CustomArgumentParser(argparse.ArgumentParser):
 def find_root_dir(filename=".gitmodules"):
     """ finds the highest directory in tree
     which contains a file called filename """
-    try:
-        root = utils.execute_subprocess(["git","rev-parse", "--show-toplevel"],
-                                        output_to_caller=True ).rstrip()
-    except:
-        d = Path.cwd()
-        root = Path(d.root)
-        dirlist = []
-        dl = d
-        while dl != root:
-            dirlist.append(dl)
-            dl = dl.parent
-        dirlist.append(root)
-        dirlist.reverse()
+    d = Path.cwd()
+    root = Path(d.root)
+    dirlist = []
+    dl = d
+    while dl != root:
+        dirlist.append(dl)
+        dl = dl.parent
+    dirlist.append(root)
+    dirlist.reverse()
 
-        for dl in dirlist:
-            attempt = dl / filename
-            if attempt.is_file():
-                return dl
-        return None
-    return Path(root)
+    for dl in dirlist:
+        attempt = dl / filename
+        if attempt.is_file():
+            return str(dl)
+    return None
+#    return str(Path(root))
 
 def get_parser():
     description = """
