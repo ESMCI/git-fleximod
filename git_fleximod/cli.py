@@ -39,7 +39,6 @@ def find_root_dir(filename=".gitmodules"):
         if attempt.is_file():
             return str(dl)
     return None
-#    return str(Path(root))
 
 def get_parser():
     description = """
