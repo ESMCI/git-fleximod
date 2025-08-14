@@ -119,8 +119,9 @@ class Submodule():
                                 atag = atag[:-1]
                             if atag == self.fxtag:
                                 break
+                if atag != self.fxtag:
+                    utils.fatal_error("couldn't find remote ref refs/tags/{}".format(self.fxtag))
 
-                
                 #print(f"line is {line} ahash is {ahash} atag is {atag} {parts}")
                 #                atag = git.git_operation("describe", "--tags", "--always")
                 # ahash =  git.git_operation("rev-list", "HEAD").partition("\n")[0]
