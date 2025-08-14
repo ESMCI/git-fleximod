@@ -11,7 +11,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
         # Then append the contents of README.md
         candidate_paths = [
-            Path(sys.prefix) / "share" / "your-package" / "README.md",
+            Path(sys.prefix) / "share" / "git_fleximod" / "README.md",
             Path(__file__).resolve().parent.parent / "README.md",  # fallback for dev
         ]
         for path in candidate_paths:
