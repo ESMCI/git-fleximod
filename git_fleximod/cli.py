@@ -17,7 +17,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         for path in candidate_paths:
             if os.path.exists(path):
                 with open(path) as f:
-                    print( f.read_text(encoding="utf-8"), file=file)
+                    print( f.read(), file=file)
                     return
         print( "README.md not found.", file=file)
 
