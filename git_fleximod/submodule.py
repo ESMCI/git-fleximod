@@ -119,7 +119,6 @@ class Submodule():
                                 atag = atag[:-1]
                             if atag == self.fxtag:
                                 break
-                
                 recurse = False
                 if rurl != self.url:
                     remote = self._add_remote(git)
