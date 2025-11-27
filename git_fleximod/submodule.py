@@ -52,6 +52,8 @@ class Submodule():
         localmods = False
         needsupdate = False
         ahash = None
+        full_width = 23
+        name_width = full_width - 3
         optional = ""
         if "Optional" in self.fxrequired:
             optional = " (optional)"
@@ -78,7 +80,7 @@ class Submodule():
                 if hhash and atag:
                     break
             if self.fxtag and (ahash == hhash or atag == self.fxtag):
-                result = f"e {self.name:>20} not checked out, aligned at tag {self.fxtag}{optional}"
+                result = f"e {self.name:>{name_width}} not checked out, aligned at tag {self.fxtag}{optional}"
                 needsupdate = True
             elif self.fxtag:
                 status, ahash = rootgit.git_operation(
@@ -86,20 +88,20 @@ class Submodule():
                 )
                 ahash = ahash[1 : len(self.fxtag) + 1]
                 if self.fxtag == ahash:
-                    result = f"e {self.name:>20} not checked out, aligned at hash {ahash}{optional}"
+                    result = f"e {self.name:>{name_width}} not checked out, aligned at hash {ahash}{optional}"
                 else:
-                    result = f"e {self.name:>20} not checked out, out of sync at tag {atag}, expected tag is {self.fxtag}{optional}"
+                    result = f"e {self.name:>{name_width}} not checked out, out of sync at tag {atag}, expected tag is {self.fxtag}{optional}"
                     testfails = True
                 needsupdate = True
             else:
-                result = f"e {self.name:>20} has no fxtag defined in .gitmodules{optional}"
+                result = f"e {self.name:>{name_width}} has no fxtag defined in .gitmodules{optional}"
                 testfails = False
         else:
             with utils.pushd(smpath):
                 git = GitInterface(smpath, self.logger)
                 status, remote = git.git_operation("remote")
                 if remote == '':
-                    result = f"e {self.name:>20} has no associated remote"
+                    result = f"e {self.name:>{name_width}} has no associated remote"
                     testfails = True
                     needsupdate = True
                     return result, needsupdate, localmods, testfails
@@ -123,36 +125,44 @@ class Submodule():
                 if rurl != self.url:
                     remote = self._add_remote(git)
                     git.git_operation("fetch", remote)
+
+                extra_chars = ""
+                _, status_output = git.git_operation("status", "--ignore-submodules", "-uno")
+                if "nothing to commit" not in status_output:
+                    localmods = True
+                    extra_chars = "M"
+                    # Adjust width of the name field to keep alignment right with the
+                    # extra 'M' char:
+                    name_width = name_width - 1
+
                 # Asked for a tag and found that tag
                 if self.fxtag and atag == self.fxtag:
-                    result = f"  {self.name:>20} at tag {self.fxtag}"
+                    result = f"{extra_chars}  {self.name:>{name_width}} at tag {self.fxtag}"
                     recurse = True
                     testfails = False
                 # Asked for and found a hash
                 elif self.fxtag and (ahash[: len(self.fxtag)] == self.fxtag or (self.fxtag.find(ahash)==0)):
-                    result = f"  {self.name:>20} at hash {ahash}"
+                    result = f"{extra_chars}  {self.name:>{name_width}} at hash {ahash}"
                     recurse = True
                     testfails = False
                 # Asked for and found a hash
                 elif atag == ahash:
-                    result = f"  {self.name:>20} at hash {ahash}"
+                    result = f"{extra_chars}  {self.name:>{name_width}} at hash {ahash}"
                     recurse = True
                 # Did not find requested tag or hash
                 elif self.fxtag:
-                    result = f"s {self.name:>20} {atag} {ahash} is out of sync with .gitmodules {self.fxtag}"
+                    result = f"s{extra_chars} {self.name:>{name_width}} {atag} {ahash} is out of sync with .gitmodules {self.fxtag}"
                     testfails = True
                     needsupdate = True
                 else:
                     if atag:
-                        result = f"e {self.name:>20} has no fxtag defined in .gitmodules, module at {atag}"
+                        result = f"e{extra_chars} {self.name:>{name_width}} has no fxtag defined in .gitmodules, module at {atag}"
                     else:
-                        result = f"e {self.name:>20} has no fxtag defined in .gitmodules, module at {ahash}"
+                        result = f"e{extra_chars} {self.name:>{name_width}} has no fxtag defined in .gitmodules, module at {ahash}"
                     testfails = False
 
-                status, output = git.git_operation("status", "--ignore-submodules", "-uno")
-                if "nothing to commit" not in output:
-                    localmods = True
-                    result = "M" + textwrap.indent(output, "                      ")
+                if localmods:
+                    result = result + "\n" + textwrap.indent(status_output, " "*full_width)
 #        print(f"result {result} needsupdate {needsupdate} localmods {localmods} testfails {testfails}")
         return result, needsupdate, localmods, testfails
 

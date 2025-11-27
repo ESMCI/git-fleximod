@@ -193,13 +193,12 @@ def submodules_status(gitmodules, root_dir, toplevel=False, depth=0):
     testfails = 0
     localmods = 0
     needsupdate = 0
-    wrapper = textwrap.TextWrapper(initial_indent=' '*(depth*10), width=120,subsequent_indent=' '*(depth*20))
     for name in gitmodules.sections():
         submod = init_submodule_from_gitmodules(gitmodules, name, root_dir, logger)
             
         result,n,l,t = submod.status()
         if toplevel or not submod.toplevel():
-            print(wrapper.fill(result))
+            print(result)
             testfails += t
             localmods += l
             needsupdate += n
