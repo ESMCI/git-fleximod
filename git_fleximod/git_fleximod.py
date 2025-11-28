@@ -196,7 +196,7 @@ def submodules_status(gitmodules, root_dir, toplevel=False, depth=0):
     for name in gitmodules.sections():
         submod = init_submodule_from_gitmodules(gitmodules, name, root_dir, logger)
             
-        result,n,l,t = submod.status()
+        result,n,l,t = submod.status(depth=depth)
         if toplevel or not submod.toplevel():
             print(result)
             testfails += t
