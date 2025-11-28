@@ -38,7 +38,7 @@ class Submodule():
             self.fxrequired = "AlwaysRequired"
         self.logger = logger
 
-    def status(self, depth=0):
+    def status(self, depth=0, no_mods_details=False):
         """
         Checks the status of the submodule and returns 4 parameters:
         - result (str): The status of the submodule.
@@ -46,7 +46,11 @@ class Submodule():
         - localmods (bool): An indicator if the submodule has local modifications.
         - testfails (bool): An indicator if the submodule has failed a test, this is used for testing purposes.
 
-        The optional depth argument is used to indent output for nested submodules
+        Args:
+            depth (int, optional): depth of this submodule relative to root, used to
+                                   indent output for nested submodules
+            no_mods_details (bool, optional): if True, suppress details on local mods in
+                                              status output
         """
 
         smpath = os.path.join(self.root_dir, self.path)
@@ -170,7 +174,7 @@ class Submodule():
                         result = f"e{mod_char} {full_name:<{full_width}} has no fxtag defined in .gitmodules, module at {ahash}"
                     testfails = False
 
-                if localmods:
+                if localmods and not no_mods_details:
                     # Print details about the local mods, indented below the other
                     # information about this submodule.
                     #

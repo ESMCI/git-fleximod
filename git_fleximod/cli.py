@@ -117,6 +117,13 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--no-mods-details",
+        action="store_true",
+        default=False,
+        help="Suppress details on local mods in status output."
+    )
+
+    parser.add_argument(
         "-V",
         "--version",
         action="version",
