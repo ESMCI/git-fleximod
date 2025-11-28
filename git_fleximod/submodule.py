@@ -60,7 +60,7 @@ class Submodule():
         ahash = None
 
         # The following prefix gives a tree-like output:
-        tree_prefix_spaces = 2
+        tree_prefix_spaces = 3
         if depth == 0:
             tree_prefix = ""
         else:
