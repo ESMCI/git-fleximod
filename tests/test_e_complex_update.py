@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from git_fleximod.gitinterface import GitInterface
-from utils_for_tests import normalize_whitespace
+from tests.utils_for_tests import normalize_whitespace
 
 def test_complex_update(git_fleximod, complex_update, logger):
     status = git_fleximod(complex_update, "status")

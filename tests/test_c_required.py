@@ -1,7 +1,7 @@
 import pytest
 import re
 from pathlib import Path
-from utils_for_tests import normalize_whitespace
+from tests.utils_for_tests import normalize_whitespace
 
 def test_required(git_fleximod, test_repo, shared_repos):
     file_path = (test_repo / ".gitmodules")
