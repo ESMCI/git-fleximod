@@ -75,7 +75,9 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
     # --- Scenario 3: Local mods, repo out-of-sync, conflict ---
     # Simulate conflict by modifying file and checking out previous commit that changes the same file
     if len(log) > 2:
-        # Reset to a further previous commit
+        # Recover original README file
+        subprocess.check_call(["git", "restore", "README"], cwd=submodule_dir)
+        # Reset to a further previous commit\
         conflict_hash = log[2].split()[0]
         subprocess.check_call(["git", "checkout", conflict_hash], cwd=submodule_dir)
         # Overwrite file with conflicting content
