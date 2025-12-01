@@ -52,7 +52,7 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
     result1 = git_fleximod(test_repo, f"update {repo_name}")
     assert result1.returncode == 0
     assert test_file.read_text() == original_content + local_mod_content, "Local modification was overwritten when repo was in sync!"
-""" 
+
     # --- Scenario 2: Local mods, repo out-of-sync, no conflict ---
     # Simulate out-of-sync by checking out previous commit/tag in submodule
     import subprocess
@@ -71,7 +71,7 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
         assert test_file.read_text() == original_content + local_mod_content, "Local modification was lost after update with no conflict!"
         status = git_fleximod(test_repo, f"status {repo_name}")
         assert "modified files" in status.stdout or "modified" in status.stdout.lower()
-
+"""
     # --- Scenario 3: Local mods, repo out-of-sync, conflict ---
     # Simulate conflict by modifying file and checking out previous commit that changes the same file
     if len(log) > 2:
