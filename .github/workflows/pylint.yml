@@ -1,0 +1,43 @@
+name: pre-commit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pipx
+          pipx install poetry
+          poetry --version
+      - name: Enable in-project venv for better caching
+        run: poetry config virtualenvs.in-project true
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+      - name: Install deps (incl. dev)
+        run: poetry install --no-interaction --no-ansi
+      - name: Run pre-commit on all files
+        run: poetry run pre-commit run --all-files
+#     the following can be used by developers to login to the github server in case of errors
+#     see https://github.com/marketplace/actions/debugging-with-tmate for further details
+#      - name: Setup tmate session
+#        if: ${{ failure() }}
+#        uses: mxschmitt/action-tmate@v3
