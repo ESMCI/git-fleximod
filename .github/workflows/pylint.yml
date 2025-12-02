@@ -21,6 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pipx
           pipx install poetry
+          pip install --upgrade wrapt
           poetry --version
       - name: Enable in-project venv for better caching
         run: poetry config virtualenvs.in-project true
