@@ -1,13 +1,12 @@
-import pytest
+# tests/test_b_update.py
 import time
 from pathlib import Path
-from tests.utils_for_tests import normalize_whitespace
-import shutil
+
 
 def test_basic_checkout(git_fleximod, test_repo, shared_repos):
     # Prepare a simple .gitmodules
-    gm = shared_repos['gitmodules_content']
-    file_path = (test_repo / ".gitmodules")
+    gm = shared_repos["gitmodules_content"]
+    file_path = test_repo / ".gitmodules"
     repo_name = shared_repos["submodule_name"]
     repo_path = shared_repos["subrepo_path"]
 
@@ -17,11 +16,17 @@ def test_basic_checkout(git_fleximod, test_repo, shared_repos):
     result = git_fleximod(test_repo, f"update {repo_name}")
 
     # Assertions
-    assert result.returncode == 0 
-    assert Path(test_repo / repo_path).exists()   # Did the submodule directory get created?
+    assert result.returncode == 0
+    assert Path(
+        test_repo / repo_path
+    ).exists()  # Did the submodule directory get created?
     if "sparse" in repo_name:
-        assert Path(test_repo /  f"{repo_path}/m4").exists()   # Did the submodule sparse directory get created?
-        assert not Path(test_repo /  f"{repo_path}/README").exists()   # Did only the submodule sparse directory get created?
+        assert Path(
+            test_repo / f"{repo_path}/m4"
+        ).exists()  # Did the submodule sparse directory get created?
+        assert not Path(
+            test_repo / f"{repo_path}/README"
+        ).exists()  # Did only the submodule sparse directory get created?
 
 
 def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
@@ -34,32 +39,38 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
     repo_name = shared_repos["submodule_name"]
     repo_path = shared_repos["subrepo_path"]
     submodule_dir = test_repo / repo_path
-  
+
     # Ensure submodule is checked out and at intended tag
-    gm = shared_repos['gitmodules_content']
+    gm = shared_repos["gitmodules_content"]
     (test_repo / ".gitmodules").write_text(gm)
     result = git_fleximod(test_repo, f"update {repo_name}")
     assert result.returncode == 0
     assert submodule_dir.exists()
     test_file = submodule_dir / "README"
     if not test_file.exists():
-        pytest.skip("Test file does not exist in submodule, skipping local modification tests.")    
-    
+        # README must exist in the repository for this test. If not, skip this test.
+        return
+
     # --- Scenario 1: Local mods, repo in sync ---
     original_content = test_file.read_text()
     local_mod_content = f"local modification {time.time()}\n"
     test_file.write_text(original_content + local_mod_content)
     result1 = git_fleximod(test_repo, f"update {repo_name}")
     assert result1.returncode == 0
-    assert test_file.read_text() == original_content + local_mod_content, "Local modification was overwritten when repo was in sync!"
+    assert (
+        test_file.read_text() == original_content + local_mod_content
+    ), "Local modification was overwritten when repo was in sync!"
 
     # --- Scenario 2: Local mods, repo out-of-sync, no conflict ---
     # Simulate out-of-sync by checking out previous commit/tag in submodule
     import subprocess
-    # Get current commit hash
-    cur_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=submodule_dir).decode().strip()
+
     # Try to checkout previous commit (if possible)
-    log = subprocess.check_output(["git", "log", "--pretty=oneline"], cwd=submodule_dir).decode().splitlines()
+    log = (
+        subprocess.check_output(["git", "log", "--pretty=oneline"], cwd=submodule_dir)
+        .decode()
+        .splitlines()
+    )
     if len(log) > 1:
         prev_hash = log[1].split()[0]
         subprocess.check_call(["git", "checkout", prev_hash], cwd=submodule_dir)
@@ -68,7 +79,9 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
         result2 = git_fleximod(test_repo, f"update {repo_name}")
         assert result2.returncode == 0
         # Should retain local mod and show message
-        assert test_file.read_text() == original_content + local_mod_content, "Local modification was lost after update with no conflict!"
+        assert (
+            test_file.read_text() == original_content + local_mod_content
+        ), "Local modification was lost after update with no conflict!"
         status = git_fleximod(test_repo, f"status {repo_name}")
         assert "modified files" in status.stdout or "modified" in status.stdout.lower()
 
@@ -85,6 +98,6 @@ def test_local_modification_scenarios(git_fleximod, test_repo, shared_repos):
         try:
             git_fleximod(test_repo, f"update {repo_name}")
         except Exception as e:
-            assert "ERROR" in str(e) or "Failed to checkout" in str(e), "Expected error not raised for conflict scenario!"
-
- 
+            assert "ERROR" in str(e) or "Failed to checkout" in str(
+                e
+            ), "Expected error not raised for conflict scenario!"
