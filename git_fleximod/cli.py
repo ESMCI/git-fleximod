@@ -1,8 +1,8 @@
 from pathlib import Path
 import argparse, os, sys
-from git_fleximod import utils
 
 __version__ = "1.1.0"
+
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def print_help(self, file=None):
@@ -17,13 +17,14 @@ class CustomArgumentParser(argparse.ArgumentParser):
         for path in candidate_paths:
             if os.path.exists(path):
                 with open(path) as f:
-                    print( f.read(), file=file)
+                    print(f.read(), file=file)
                     return
-        print( "README.md not found.", file=file)
+        print("README.md not found.", file=file)
+
 
 def find_root_dir(filename=".gitmodules"):
-    """ finds the highest directory in tree
-    which contains a file called filename """
+    """finds the highest directory in tree
+    which contains a file called filename"""
     d = Path.cwd()
     root = Path(d.root)
     dirlist = []
@@ -39,6 +40,7 @@ def find_root_dir(filename=".gitmodules"):
         if attempt.is_file():
             return str(dl)
     return None
+
 
 def get_parser():
     description = """
@@ -120,7 +122,7 @@ def get_parser():
         "--no-mods-details",
         action="store_true",
         default=False,
-        help="Suppress details on local mods in status output."
+        help="Suppress details on local mods in status output.",
     )
 
     parser.add_argument(

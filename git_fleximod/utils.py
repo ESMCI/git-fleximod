@@ -307,9 +307,8 @@ def execute_subprocess(commands, status_to_caller=False, output_to_caller=False)
         # simple status check. If returning, it is the callers
         # responsibility determine if an error occurred and handle it
         # appropriately.
-        msg_context = (
-            "Process did not run successfully; "
-            "returned status {0}".format(error.returncode)
+        msg_context = "Process did not run successfully; " "returned status {0}".format(
+            error.returncode
         )
         msg = failed_command_msg(msg_context, commands, output=error.output)
         if not return_to_caller:
