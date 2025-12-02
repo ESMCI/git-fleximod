@@ -23,8 +23,19 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
 
 def find_root_dir(filename=".gitmodules"):
-    """finds the highest directory in tree
-    which contains a file called filename"""
+    """
+    Finds the highest directory in tree which contains a file called filename.
+
+    >>> import tempfile, os
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     subdir = Path(tmp) / 'subdir'
+    ...     subdir.mkdir()
+    ...     f = Path(tmp) / '.gitmodules'
+    ...     _ = f.write_text('')
+    ...     os.chdir(subdir)
+    ...     find_root_dir('.gitmodules') == tmp
+    True
+    """
     d = Path.cwd()
     root = Path(d.root)
     dirlist = []

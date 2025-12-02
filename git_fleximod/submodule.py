@@ -37,6 +37,14 @@ class Submodule:
     ):
         """
         Initializes a new Submodule instance with the provided attributes.
+
+        >>> sm = Submodule('.', 'foo', 'bar', 'https://example.com')
+        >>> sm.name
+        'foo'
+        >>> sm.path
+        'bar'
+        >>> sm.url
+        'https://example.com'
         """
         self.name = name
         self.root_dir = root_dir
