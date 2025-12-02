@@ -18,8 +18,7 @@ jobs:
           cache: 'pip'
       - name: Install Poetry
         run: |
-          python -m pip install --upgrade pip wheel setuptools wrapt
-          python -m pip install pipx
+          python -m pip install --upgrade pip wheel setuptools wrapt pipx pre-commit
           pipx install poetry
           poetry --version
       - name: Clear pre-commit cache
