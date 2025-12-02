@@ -27,13 +27,16 @@ def find_root_dir(filename=".gitmodules"):
     Finds the highest directory in tree which contains a file called filename.
 
     >>> import tempfile, os
+    >>> cwd = os.getcwd()
     >>> with tempfile.TemporaryDirectory() as tmp:
     ...     subdir = Path(tmp) / 'subdir'
     ...     subdir.mkdir()
     ...     f = Path(tmp) / '.gitmodules'
     ...     _ = f.write_text('')
     ...     os.chdir(subdir)
-    ...     find_root_dir('.gitmodules') == tmp
+    ...     result = find_root_dir('.gitmodules') == str(tmp)
+    ...     os.chdir(cwd)
+    ...     result
     True
     """
     d = Path.cwd()
