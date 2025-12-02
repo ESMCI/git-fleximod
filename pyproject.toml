@@ -20,7 +20,7 @@ me2flexi = "git_fleximod.metoflexi:_main"
 fsspec = "fsspec.fuse:main"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9"
 GitPython = "^3.1.0"
 sphinx = "^5.0.0"
 fsspec = "^2023.12.2"
