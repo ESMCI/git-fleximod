@@ -23,6 +23,8 @@ jobs:
           pipx install poetry
           pip install --upgrade wrapt
           poetry --version
+      - name: Clear pre-commit cache
+        run: rm -rf ~/.cache/pre-commit
       - name: Enable in-project venv for better caching
         run: poetry config virtualenvs.in-project true
       - name: Cache virtualenv
