@@ -28,6 +28,7 @@ wheel = "^0.42.0"
 pytest = "^8.0.0"
 pyfakefs = "^5.3.5"
 pre-commit = "4.3.0"
+wrapt = ">=1.16.0"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/jedwards4b/git-fleximod/issues"
