@@ -492,7 +492,8 @@ class Submodule():
                     for f in files.split('\0'):
                         if f:
                             if os.path.exists(f):
-                                git.git_operation("checkout",f)
+                                self.logger.info(f"File {f} locally modified")
+                                modfiles.append(f)
                             elif os.path.isdir(f):
                                 moddirs.append(f)
                             else:
