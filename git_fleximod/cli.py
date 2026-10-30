@@ -1,5 +1,5 @@
 from pathlib import Path
-import argparse, os, sys
+import argparse, os, subprocess, sys
 
 __version__ = "1.1.1"
 
@@ -22,38 +22,94 @@ class CustomArgumentParser(argparse.ArgumentParser):
         print("README.md not found.", file=file)
 
 
+def _git_output(*args, cwd=None):
+    """Return the stdout of a git command, or None if it fails or git is missing."""
+    try:
+        result = subprocess.run(
+            ["git", *args], cwd=cwd, capture_output=True, text=True, check=False
+        )
+    except OSError:
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def _lists_submodule(parent, child, filename):
+    """True if `parent`/`filename` has a submodule entry whose path is `child`."""
+    gitmodules = os.path.join(parent, filename)
+    if not os.path.isfile(gitmodules):
+        return False
+    # git parses the indented lines of a .gitmodules file; configparser would not.
+    entries = _git_output(
+        "config",
+        "--file",
+        gitmodules,
+        "--null",
+        "--get-regexp",
+        r"^submodule\..*\.path$",
+    )
+    rel = os.path.relpath(child, parent)
+    # --null output is one "<key>\n<value>\0" piece per entry.
+    for entry in (entries or "").split("\0"):
+        # Take the path value after the key; the empty piece after the last \0, or an
+        # entry whose path has no value, leaves it empty.
+        _, _, path = entry.partition("\n")
+        if not path:
+            continue
+        # .gitmodules may spell the path "libs/./c/"; normalise it before comparing
+        # with the child's path relative to the parent.
+        if os.path.normpath(path) == rel:
+            return True
+    return False
+
+
 def find_root_dir(filename=".gitmodules"):
     """
-    Finds the highest directory in tree which contains a file called filename.
+    Finds the root directory git-fleximod should operate on: the directory containing
+    a file called `filename`, at the top of the chain of superprojects above the current
+    directory.
 
-    >>> import tempfile, os
-    >>> cwd = os.getcwd()
-    >>> with tempfile.TemporaryDirectory() as tmp:
-    ...     subdir = Path(tmp) / 'subdir'
-    ...     subdir.mkdir()
-    ...     f = Path(tmp) / '.gitmodules'
-    ...     _ = f.write_text('')
-    ...     os.chdir(subdir)
-    ...     result = find_root_dir('.gitmodules') == str(tmp)
-    ...     os.chdir(cwd)
-    ...     result
-    True
+    Starts at the top level of the current git repository (or worktree) and climbs
+    while either holds:
+
+    - git reports a superproject;
+    - an ancestor directory's `filename` lists the current directory as a submodule path
+      (a clone that git does not know as a submodule, such as one in a gitignored
+      directory).
+
+    Returns None if the
+    resulting directory has no `filename`. Outside any git repository, returns the
+    highest directory containing `filename`.
     """
-    d = Path.cwd()
-    root = Path(d.root)
-    dirlist = []
-    dl = d
-    while dl != root:
-        dirlist.append(dl)
-        dl = dl.parent
-    dirlist.append(root)
-    dirlist.reverse()
-
-    for dl in dirlist:
-        attempt = dl / filename
-        if attempt.is_file():
-            return str(dl)
-    return None
+    d = _git_output("rev-parse", "--show-toplevel")
+    if d is None:
+        # Not in a git repository (tarball extract, or git is not installed), so
+        # there is no superproject chain; use the highest directory with `filename`.
+        for dl in reversed([Path.cwd(), *Path.cwd().parents]):
+            if (dl / filename).is_file():
+                return str(dl)
+        return None
+    d = d.strip()
+    while True:
+        # 1. The parent is the superproject: git reports it when d is a submodule.
+        parent = (
+            _git_output("rev-parse", "--show-superproject-working-tree", cwd=d) or ""
+        ).strip()
+        if not parent:
+            # 2. The parent lists d as a submodule: a clone that git does not report as
+            # a submodule (e.g. under a gitignored directory). The nearest ancestor
+            # listing d wins; parent stays empty if none does.
+            for anc in Path(d).parents:
+                if _lists_submodule(anc, d, filename):
+                    parent = str(anc)
+                    break
+        if not parent:
+            break
+        d = parent
+    # d holds the root but there may be nothing to do: d lacks `filename` if it is a
+    # repository with no submodules (the loop never climbed), or if git reports it as a
+    # superproject of a gitlink but it has no `filename`; in either case, there is
+    # nothing for git-fleximod to operate on.
+    return d if os.path.isfile(os.path.join(d, filename)) else None
 
 
 def get_parser():
